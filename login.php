@@ -12,6 +12,8 @@ $success = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
+    $user_session="";
+    $status="";
 
     if (!empty($username) && !empty($password)) {
         $sql = "SELECT * FROM login WHERE Username = :username AND Password = :password";
@@ -26,7 +28,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($result->rowCount() > 0) {
             $_SESSION['username'] = $username;
-            $success = "Login successful!";
+            $user = $result->fetch(PDO::FETCH_ASSOC);
+            $user_session = $user['user_type'];
+            $_SESSION['user_session']=$user_session;
+            $status=$user['status'];
+            $_SESSION['status']=$status;
+            if($status!="A"){
+                $error="Account not Activated";
+            }else{
+                $success = "Login successful!";
+            }
+            //redirects to be added later according to user_session
         } else {
             $error = "Invalid username or password";
         }
@@ -63,6 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
+        
     </div>
 </body>
 </html>
