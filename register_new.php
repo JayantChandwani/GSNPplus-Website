@@ -208,6 +208,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
 
             <label for="height">Height:</label>
             <input type="number" id="height" name="height" required>
+            <label for="weight">Weight:</label>
+            <input type="number" id="weight" name="weight" required>
 
             <label for="marital_status">Marital Status:</label>
             <select id="marital_status" name="marital_status">
