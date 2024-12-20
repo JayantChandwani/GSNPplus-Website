@@ -51,17 +51,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
         
         switch($current_step) {
             case 1: // Personal Information
-                $stmt = $pdo->prepare("INSERT INTO candidate (name, dob, height, weight, marital_status) 
-                                     VALUES (:name, :dob, :height, :weight, :marital_status)");
-                $stmt->execute([
-                    'name' => sanitize_input($_POST['name']),
-                    'dob' => sanitize_input($_POST['dob']),
-                    'height' => sanitize_input($_POST['height']),
-                    'weight' => sanitize_input($_POST['weight']),
-                    'marital_status' => sanitize_input($_POST['marital_status'])
-                ]);
-                $_SESSION['candidate_id'] = $pdo->lastInsertId();
-                break;
+                $stmt = $pdo->prepare("INSERT INTO candidate (first_name, middle_name, last_name, dob, height, weight, marital_status) 
+                           VALUES (:first_name, :middle_name, :last_name, :dob, :height, :weight, :marital_status)");
+                 $stmt->execute([
+                     'first_name' => sanitize_input($_POST['first_name']),
+                     'middle_name' => sanitize_input($_POST['middle_name']),
+                     'last_name' => sanitize_input($_POST['last_name']),
+                     'dob' => sanitize_input($_POST['dob']),
+                     'height' => sanitize_input($_POST['height']),
+                     'weight' => sanitize_input($_POST['weight']),
+                     'marital_status' => sanitize_input($_POST['marital_status'])
+    ]);
+    $_SESSION['candidate_id'] = $pdo->lastInsertId();
+    break;
+
                 
             case 2: // Family Information
                 $stmt = $pdo->prepare("INSERT INTO family (candidate_id, family_members, hiv_affected) 
@@ -194,9 +197,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
         <!-- Step 1: Personal Information -->
         <fieldset class="active">
             <legend>Step 1: Personal Information</legend>
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
-
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" name="first_name" required>
+            <label for="middle_name">Middle Name:</label>
+            <input type="text" id="middle_name" name="middle_name" required>
+            <label for="last_name"> Last Name:</label>
+            <input type="text" id="last_name" name="last_name" required>
             <label for="dob">Date of Birth:</label>
             <input type="date" id="dob" name="dob" required>
 
