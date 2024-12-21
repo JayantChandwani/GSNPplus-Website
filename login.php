@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if($status!="A"){
                 $error="Account not Activated";
             }else{
-                $success = "Login successful!";
+                header('Location: otp_login.php');
             }
             //redirects to be added later according to user_session
         } else {
