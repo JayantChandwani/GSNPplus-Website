@@ -1,4 +1,5 @@
 <?php
+ob_start();
 // Start session for form progress tracking
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -112,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
      
     }
 }
+ob_end_flush();
 ?>
 
 <!DOCTYPE html>
