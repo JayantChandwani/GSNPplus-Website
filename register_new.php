@@ -50,17 +50,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
     
         $conn->beginTransaction();
-        echo"2";
+       
         $stmt = $conn->prepare("INSERT INTO candidate (cid,FirstName, MiddleName, LastName, DOB,Height_inch,Weight,MaritalStatus)
                                VALUES (:cid,:first_name, :middle_name, :last_name, :dob, :height, :weight, :marital_status)");
         $stmt->execute([':cid'=>$candidate_id,':first_name'=>$first_name,
         ':middle_name'=>$middle_name,':last_name'=>$last_name,
         ':dob'=>$dob,':height'=>$height,
         ':weight'=>$weight,':marital_status'=>$marital_status]);
-        echo "3";
+        
     
         //Step 2 SQL Query
-        echo "1";
+        
         $stmt = $conn->prepare("INSERT INTO health (cid, HivDetectDate, ArtStatus, CD4Count) 
                              VALUES (:candidate_id, :hiv_detection, :art_status, :cd4_count)");
         $stmt->execute([
@@ -107,9 +107,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit();
     } catch (Exception $e) {
         $conn->rollBack();
-        echo "Na";
+       
         $error = 'Error during registration: ' . $e->getMessage();
-        echo "$error";
+     
     }
 }
 ?>
