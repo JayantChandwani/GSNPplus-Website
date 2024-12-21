@@ -4,173 +4,112 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
 
-try {
-    // Database connection using PDO
-    $dsn = "mysql:host=localhost;dbname=gsnpplus;charset=utf8mb4";
-    $username = "root";
-    $password = "";
-    $options = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ];
-    $pdo = new PDO($dsn, $username, $password, $options);
-} catch(PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
+require_once 'dbconn.php';
 
-// Initialize variables for form sections
-$current_step = isset($_POST['step']) ? $_POST['step'] : 1;
-$total_steps = 8;
+
+
 $error = '';
 $success = '';
 
-// Function to validate file upload
-function validate_file($file, $allowed_types = ['jpg', 'jpeg', 'png', 'pdf'], $max_size = 52428800) {
-    if ($file['size'] > $max_size) {
-        return "File size exceeds 50MB limit";
-    }
-    
-    $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    if (!in_array($file_ext, $allowed_types)) {
-        return "Invalid file type. Allowed types: " . implode(', ', $allowed_types);
-    }
-    
-    return true;
-}
+
+
 
 // Function to sanitize input and prevent XSS attacks
 function sanitize_input($input) {
-    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    // Ensure $input is a string before applying trim
+    $input = is_string($input) ? trim($input) : '';
+    return htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
 }
 
 // Process form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $first_name=sanitize_input($_POST['first_name']);
+    $middle_name=sanitize_input($_POST['middle_name']);
+    $last_name=sanitize_input($_POST['last_name']);
+    $dob=sanitize_input($_POST['dob']);
+    $height=sanitize_input($_POST['height']);
+    $weight=sanitize_input($_POST['weight']);
+    $marital_status=sanitize_input($_POST['marital_status']);
+    
+    $family_members=sanitize_input($_POST['family_members']);
+    $hiv_positive_members=sanitize_input($_POST['hiv_positive_members']);
+    $hiv_detection=sanitize_input($_POST['hiv_detection']);
+    $art_status=sanitize_input($_POST['art_status']);
+    $cd4_count=sanitize_input($_POST['cd4_count']);
+    $employment=sanitize_input($_POST['employment']);
+    $income=sanitize_input($_POST['income']);
+    $property_type=sanitize_input($_POST['property_type']);
+    $property_value=sanitize_input($_POST['property_value']);
+    $ref_name=sanitize_input($_POST['ref_name']);
+    $ref_contact=sanitize_input($_POST['ref_contact']);
+    $username=sanitize_input($_POST['username']);
+    $email=sanitize_input($_POST['email']);
+    $password=sanitize_input($_POST['password']);
+    $candidate_id="ishaan23";
+    //Have to Make a Candidate_ID generating function
     try {
-        $pdo->beginTransaction();
+    
+        $conn->beginTransaction();
+        echo"2";
+        $stmt = $conn->prepare("INSERT INTO candidate (cid,FirstName, MiddleName, LastName, DOB,Height_inch,Weight,MaritalStatus)
+                               VALUES (:cid,:first_name, :middle_name, :last_name, :dob, :height, :weight, :marital_status)");
+        $stmt->execute([':cid'=>$candidate_id,':first_name'=>$first_name,
+        ':middle_name'=>$middle_name,':last_name'=>$last_name,
+        ':dob'=>$dob,':height'=>$height,
+        ':weight'=>$weight,':marital_status'=>$marital_status]);
+        echo "3";
+    
+        //Step 2 SQL Query
+        echo "1";
+        $stmt = $conn->prepare("INSERT INTO health (cid, HivDetectDate, ArtStatus, CD4Count) 
+                             VALUES (:candidate_id, :hiv_detection, :art_status, :cd4_count)");
+        $stmt->execute([
+            ':candidate_id' => $candidate_id,
+            ':hiv_detection' => $hiv_detection,
+            ':art_status' => $art_status,
+            ':cd4_count' => $cd4_count
+        ]);
         
-        switch($current_step) {
-            case 1: // Personal Information
-                $stmt = $pdo->prepare("INSERT INTO candidate (first_name, middle_name, last_name, dob, height, weight, marital_status) 
-                           VALUES (:first_name, :middle_name, :last_name, :dob, :height, :weight, :marital_status)");
-                 $stmt->execute([
-                     'first_name' => sanitize_input($_POST['first_name']),
-                     'middle_name' => sanitize_input($_POST['middle_name']),
-                     'last_name' => sanitize_input($_POST['last_name']),
-                     'dob' => sanitize_input($_POST['dob']),
-                     'height' => sanitize_input($_POST['height']),
-                     'weight' => sanitize_input($_POST['weight']),
-                     'marital_status' => sanitize_input($_POST['marital_status'])
-    ]);
-    $_SESSION['candidate_id'] = $pdo->lastInsertId();
-    break;
 
-                
-            case 2: // Family Information
-                $stmt = $pdo->prepare("INSERT INTO family (candidate_id, family_members, hiv_affected) 
-                                     VALUES (:candidate_id, :family_members, :hiv_affected)");
-                $stmt->execute([
-                    'candidate_id' => $_SESSION['candidate_id'],
-                    'family_members' => sanitize_input($_POST['family_members']),
-                    'hiv_affected' => sanitize_input($_POST['hiv_affected'])
-                ]);
-                break;
-                
-            case 3: // Health Details
-                $stmt = $pdo->prepare("INSERT INTO health (candidate_id, hiv_detection, art_status, cd4_count) 
-                                     VALUES (:candidate_id, :hiv_detection, :art_status, :cd4_count)");
-                $stmt->execute([
-                    'candidate_id' => $_SESSION['candidate_id'],
-                    'hiv_detection' => sanitize_input($_POST['hiv_detection']),
-                    'art_status' => sanitize_input($_POST['art_status']),
-                    'cd4_count' => sanitize_input($_POST['cd4_count'])
-                ]);
-                break;
-                
-            case 4: // Business Information
-                $stmt = $pdo->prepare("INSERT INTO business (candidate_id, employment, income) 
-                                     VALUES (:candidate_id, :employment, :income)");
-                $stmt->execute([
-                    'candidate_id' => $_SESSION['candidate_id'],
-                    'employment' => sanitize_input($_POST['employment']),
-                    'income' => sanitize_input($_POST['income'])
-                ]);
-                break;
-                
-            case 5: // Property Details
-                $stmt = $pdo->prepare("INSERT INTO property (candidate_id, property_type, property_value) 
-                                     VALUES (:candidate_id, :property_type, :property_value)");
-                $stmt->execute([
-                    'candidate_id' => $_SESSION['candidate_id'],
-                    'property_type' => sanitize_input($_POST['property_type']),
-                    'property_value' => sanitize_input($_POST['property_value'])
-                ]);
-                break;
-                
-            case 6: // References
-                $stmt = $pdo->prepare("INSERT INTO reference (candidate_id, name, contact) 
-                                     VALUES (:candidate_id, :name, :contact)");
-                $stmt->execute([
-                    'candidate_id' => $_SESSION['candidate_id'],
-                    'ref_name' => sanitize_input($_POST['ref_name']),
-                    'ref_contact' => sanitize_input($_POST['ref_contact'])
-                ]);
-                break;
-                
-            case 7: // Account Setup
-                // Check if password matches
-                if ($_POST['password'] !== $_POST['confirm_password']) {
-                    throw new Exception("Passwords do not match");
-                }
-                $stmt = $pdo->prepare("INSERT INTO login (candidate_id, username, email, password) 
-                                     VALUES (:candidate_id, :username, :email, :password)");
-                $stmt->execute([
-                    'candidate_id' => $_SESSION['candidate_id'],
-                    'username' => sanitize_input($_POST['username']),
-                    'email' => sanitize_input($_POST['email']),
-                    'password' => password_hash($_POST['password'], PASSWORD_BCRYPT)
-                ]);
-                $_SESSION['username'] = $_POST['username'];
-                break;
-                
-            case 8: // File Uploads
-                $upload_dir = "uploads/";
-                $files = ['photo', 'hiv_report', 'address_proof', 'id_proof'];
-                
-                foreach ($files as $file_type) {
-                    if (isset($_FILES[$file_type])) {
-                        $file = $_FILES[$file_type];
-                        $validation = validate_file($file);
-                        
-                        if ($validation === true) {
-                            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                            $new_filename = $_SESSION['username'] . '_' . $file_type . '.' . $ext;
-                            move_uploaded_file($file['tmp_name'], $upload_dir . $new_filename);
-                            
-                            $stmt = $pdo->prepare("UPDATE candidate SET {$file_type}_path = :filepath 
-                                                 WHERE id = :candidate_id");
-                            $stmt->execute([
-                                'filepath' => $new_filename,
-                                'candidate_id' => $_SESSION['candidate_id']
-                            ]);
-                        } else {
-                            throw new Exception($validation);
-                        }
-                    }
-                }
-                
-                $pdo->commit();
-                header("Location: confirm.html");
-                exit();
-                break;
-        }
+        $stmt = $conn->prepare("INSERT INTO business (cid, EmploymentType, Income) 
+                             VALUES (:candidate_id, :employment, :income)");
+        $stmt->execute([
+            ':candidate_id' => $candidate_id,
+            ':employment' => $employment,
+            ':income' => $income
+        ]);
         
-        $current_step++;
-        $success = "Step $current_step completed successfully";
+        //Step 5 SQL Query
+
+        $stmt = $conn->prepare("INSERT INTO reference (cid, ReferenceName1, ReferenceContact1) 
+                             VALUES (:candidate_id, :name, :contact)");
+        $stmt->execute([
+            ':candidate_id' => $candidate_id,
+            ':name' => $ref_name,
+            ':contact' => $ref_contact
+        ]);
+
+        $stmt = $conn->prepare("INSERT INTO login (cid, Username, Email, Password) 
+                             VALUES (:candidate_id, :username, :email, :password)");
+        $stmt->execute([
+            ':candidate_id' => $candidate_id,
+            ':username' => $username,
+            ':email' => $email,
+            ':password' => $password
+        ]);
+
+        //Step 8 SQL Query
         
+        $conn->commit();
+        $success = 'Registration completed successfully!';
+        //session_destroy(); // Clear session data
+        header('Location: confirm.html');
+        exit();
     } catch (Exception $e) {
-        $pdo->rollBack();
-        $error = "Error: " . $e->getMessage();
+        $conn->rollBack();
+        echo "Na";
+        $error = 'Error during registration: ' . $e->getMessage();
+        echo "$error";
     }
 }
 ?>
@@ -181,36 +120,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Registration</title>
-    <script src="validation.js"></script>
+    
     <style>
-        fieldset {
-            display: none;
-        }
-
-        fieldset.active {
-            display: block;
-        }
+        .step { display: none; } 
+        .step.active { display: block; }
+        .error { color: red; }
     </style>
 </head>
 <body>
-    <form action="register_new.php" method="POST" enctype="multipart/form-data" id="registrationForm">
-        <!-- Step 1: Personal Information -->
-        <fieldset class="active">
-            <legend>Step 1: Personal Information</legend>
+<<form action="register_new.php" method="post" enctype="multipart/form-data" id="registrationForm">
+        <!-- Step 1 -->
+        <fieldset class="step active" id="step-1">
+            <legend>Step 1: Personal Info</legend>
             <label for="first_name">First Name:</label>
-            <input type="text" id="first_name" name="first_name" required>
+            <input type="text" id="first_name" name="first_name">
+            <span class="error" id="error-first_name"></span>
+            <br><br>
             <label for="middle_name">Middle Name:</label>
-            <input type="text" id="middle_name" name="middle_name" required>
-            <label for="last_name"> Last Name:</label>
-            <input type="text" id="last_name" name="last_name" required>
+            <input type="text" id="middle_name" name="middle_name">
+            <span class="error" id="error-middle_name"></span>
+            <br><br>
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" name="last_name">
+            <span class="error" id="error-last_name"></span>
+            <br><br>
             <label for="dob">Date of Birth:</label>
-            <input type="date" id="dob" name="dob" required>
-
-            <label for="height">Height:</label>
-            <input type="number" id="height" name="height" required>
-            <label for="weight">Weight:</label>
-            <input type="number" id="weight" name="weight" required>
-
+            <input type="date" id="dob" name="dob">
+            <span class="error" id="error-dob"></span>
+            <br><br>
+            <label for="height">Height (in inches):</label>
+            <input type="number" id="height" name="height">
+            <span class="error" id="error-height"></span>
+            <br><br>
+            <label for="weight">Weight (in kg):</label>
+            <input type="number" id="weight" name="weight">
+            <span class="error" id="error-weight"></span>
+            <br><br>
             <label for="marital_status">Marital Status:</label>
             <select id="marital_status" name="marital_status">
                 <option value="Single">Single</option>
@@ -218,45 +163,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
                 <option value="Divorced">Divorced</option>
                 <option value="Widowed">Widowed</option>
             </select>
-
+            <span class="error" id="error-marital_status"></span>
+            <br><br>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
 
-        <!-- Step 2: Family Information -->
-        <fieldset>
-            <legend>Step 2: Family Information</legend>
+        <!-- Step 2 -->
+        <fieldset class="step" id="step-2">
+            <legend>Step 2: Family Info</legend>
             <label for="family_members">Number of Family Members:</label>
-            <input type="number" id="family_members" name="family_members" required min="1" step="1">
-    
+            <input type="number" id="family_members" name="family_members">
+            <br><br>
             <label for="hiv_positive_members">Number of HIV Positive Family Members:</label>
-            <input type="number" id="hiv_positive_members" name="hiv_positive_members" required min="0" step="1">
-
-            <span id="hiv_error" style="color: red; display: none;">The number of HIV positive members cannot exceed the total number of family members.</span>
+            <input type="number" id="hiv_positive_members" name="hiv_positive_members">
+            <br><br>
+            <span class="error" id="error-step_2"></span>
+            <br><br>
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
 
-        <!-- Step 3: Health Details -->
-        <fieldset>
+        <!-- Step 3 -->
+        <fieldset class="step" id="step-3">
             <legend>Step 3: Health Details</legend>
             <label for="hiv_detection">HIV Detection Date:</label>
-            <input type="date" id="hiv_detection" name="hiv_detection" required>
-
+            <input type="date" id="hiv_detection" name="hiv_detection">
+            <br><br>
             <label for="art_status">ART Status:</label>
             <select id="art_status" name="art_status">
                 <option value="Positive">Positive</option>
                 <option value="Negative">Negative</option>
             </select>
+            <br><br>
             <label for="cd4_count">CD4 Count(per cubic mm):</label>
-            <input type="text" id="cd4_count" name="cd4_count" required>
-
+            <input type="text" id="cd4_count" name="cd4_count">
+            <br><br>
+            <span class="error" id="error-step_3"></span>
+            <br><br>
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
 
-        <!-- Step 4: Business Information -->
-        <fieldset>
-            <legend>Step 4: Business Information</legend>
+        <!-- Step 4 -->
+        <fieldset class="step" id="step-4">
+            <legend>Step 4: Business Info</legend>
             <label for="employment">Type of Employment:</label>
             <select id="employment" name="employment">
                 <option value="Private Sector">Private Sector</option>
@@ -264,16 +214,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
                 <option value="Personal Business">Personal Business</option>
                 <option value="Unemployed">Unemployed</option>
             </select>
-
+            <br><br>
             <label for="income"> Annual Income:</label>
-            <input type="text" id="income" name="income" required>
-
+            <input type="text" id="income" name="income">
+            <br><br>
+            <span class="error" id="error-step_4"></span>
+            <br><br>
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
 
-        <!-- Step 5: Property Details -->
-        <fieldset>
+        <!-- Step 5 -->
+        <fieldset class="step" id="step-5">
             <legend>Step 5: Property Details</legend>
             <label for="property_type">Property Type:</label>
             <select id="property_type" name="property_type">
@@ -283,128 +235,220 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
                 <option value="Others">Others</option>
                 <option value="-NA-">-NA-</option>
             </select>
-            <label for="property_type">Property Type:</label>
-            <select id="property_type" name="property_type">
-                <option value="Land">Land</option>
-                <option value="Flat">Flat</option>
-                <option value="Bunagalow">Bunagalow</option>
-                <option value="Others">Others</option>
-                <option value="-NA-">-NA-</option>
-            </select>
-
+            <br><br>
             <label for="property_value">Property Value:</label>
-            <input type="text" id="property_value" name="property_value" required>
-
+            <input type="text" id="property_value" name="property_value">
+            <br><br>
+            <span class="error" id="error-step_5"></span>
+            <br><br>
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
 
-        <!-- Step 6: References -->
-        <fieldset>
+        <!-- Step 6 -->
+        <fieldset class="step" id="step-6">
             <legend>Step 6: References</legend>
             <label for="ref_name">Reference Name:</label>
-            <input type="text" id="ref_name" name="ref_name" required>
-
+            <input type="text" id="ref_name" name="ref_name">
+            <br><br>
             <label for="ref_contact">Reference Contact:</label>
-            <input type="text" id="ref_contact" name="ref_contact" required>
-
+            <input type="text" id="ref_contact" name="ref_contact">
+            <br><br>
+            <span class="error" id="error-step_6"></span>
+            <br><br>
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
 
-        <!-- Step 7: Account Setup -->
-        <fieldset>
+        <!-- Step 7 -->
+        <fieldset class="step" id="step-7">
             <legend>Step 7: Account Setup</legend>
             <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-
+            <input type="text" id="username" name="username">
+            <br><br>
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-
+            <input type="email" id="email" name="email">
+            <br><br>
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-
+            <input type="password" id="password" name="password">
+            <br><br>
             <label for="confirm_password">Confirm Password:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
-
+            <input type="password" id="confirm_password" name="confirm_password">
+            <br><br>
+            <span class="error" id="error-password"></span>
+            <span class="error" id="error-email"></span>
+            <span class="error" id="error-username"></span>
+            <span class="error" id="error-step_7"></span>
+            <br><br>
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
 
-        <!-- Step 8: File Uploads -->
-        <fieldset>
-            <legend>Step 8: File Uploads</legend>
+        <!-- Step 8 -->
+        <fieldset class="step" id="step-8">
             <label for="photo">Photograph:</label>
             <input type="file" id="photo" name="photo" accept="image/*" required>
-
+            <br><br>
             <label for="hiv_report">HIV Report:</label>
             <input type="file" id="hiv_report" name="hiv_report" accept="application/pdf,image/*" required>
-
+            <br><br>
             <label for="address_proof">Address Proof:</label>
             <input type="file" id="address_proof" name="address_proof" accept="application/pdf,image/*" required>
-
+            <br><br>
             <label for="id_proof">ID Proof:</label>
-            <input type="file" id="id_proof" name="id_proof" accept="application/pdf,image/*" required>
-
+            <input type="file" id="id_proof" name="id_proof" accept="application/pdf,image/*"required>
+            <br><br>
+            <span class="error" id="error-step_8"></span>
+            <br><br>
             <button type="button" onclick="prevStep()">Previous</button>
-            <button type="submit" name="submit">Register</button>
+            <button type="submit">Register</button>
         </fieldset>
     </form>
 
     <script>
-    let currentStep = 0;
-    const fieldsets = document.querySelectorAll('fieldset');
+    let currentStep = 1;
 
-    // Function to validate that all fields in the current step are filled
-    function validateCurrentStep() {
-        const inputs = fieldsets[currentStep].querySelectorAll('input, textarea, select');
-        for (let input of inputs) {
-            if (input.required && input.value.trim() === '') {
-                alert('Please fill out all fields.');
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // Function to show the current step
     function showStep(step) {
-        fieldsets.forEach((fieldset, index) => {
-            fieldset.classList.toggle('active', index === step);
-        });
+        document.querySelectorAll('.step').forEach(stepDiv => stepDiv.classList.remove('active'));
+        document.getElementById(`step-${step}`).classList.add('active');
     }
 
-    // Function to proceed to the next step
-    function nextStep() {
-        if (validateCurrentStep()) {
-            if (currentStep < fieldsets.length - 1) {
-                currentStep++;
-                showStep(currentStep);
+    function validateStep(step) {
+        let isValid = true;
+        const errors = document.querySelectorAll('.error');
+        errors.forEach(error => error.innerText = ''); // Clear previous errors
+
+        if (step === 1) {
+            const first_name = document.getElementById('first_name').value.trim();
+            const last_name = document.getElementById('last_name').value.trim();
+            const dob = document.getElementById('dob').value.trim();
+            const height = document.getElementById('height').value.trim();
+            const weight = document.getElementById('weight').value.trim();
+            if (!first_name) {
+                document.getElementById('error-first_name').innerText = 'First name is required';
+                isValid = false;
+            }
+            if (!last_name) {
+                document.getElementById('error-last_name').innerText = 'Last name is required';
+                isValid = false;
+            }
+            if (!dob) {
+                document.getElementById('error-dob').innerText = 'Date of Birth is required';
+                isValid = false;
+            }
+            if (!height) {
+                document.getElementById('error-height').innerText = 'Height is required';
+                isValid = false;
+            }
+            if (!weight) {
+                document.getElementById('error-weight').innerText = 'Weight is required';
+                isValid = false;
+            }
+            
+        } else if (step === 2) {
+            const family_members = document.getElementById('family_members').value.trim();
+            const hiv_positive_members = document.getElementById('hiv_positive_members').value.trim();
+            if (!family_members || !hiv_positive_members) {
+                document.getElementById('error-step_2').innerText = 'All fields required';
+                isValid = false;
+            }else if(family_members<hiv_positive_members){
+                document.getElementById('error-step_2').innerText = 'Please check the inputs';
+                isValid = false;
+            }
+        }else if (step === 3) {
+            const hiv_detection = document.getElementById('hiv_detection').value.trim();
+            const art_status = document.getElementById('art_status').value.trim();
+            const cd4_count = document.getElementById('cd4_count').value.trim();
+            if (!hiv_detection || !art_status || !cd4_count) {
+                document.getElementById('error-step_3').innerText = 'All fields required';
+                isValid = false;
+            }
+        }else if (step === 4) {
+            const income = document.getElementById('income').value.trim();
+            if (!income) {
+                document.getElementById('error-step_4').innerText = 'All fields required';
+                isValid = false;
+            }
+        }else if (step === 5) {
+            const property_value = document.getElementById('property_value').value.trim();
+            if (!property_value) {
+                document.getElementById('error-step_5').innerText = 'All fields required';
+                isValid = false;
+            }
+        }else if (step === 7) {
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const confirm_password = document.getElementById('confirm_password').value.trim();
+            if (!username||!email||!password||!confirm_password) {
+                document.getElementById('error-step_7').innerText = 'All fields required';
+                isValid = false;
+            }else if(password!=confirm_password){
+                document.getElementById('error-password').innerText = 'Passwords do not match';
+                isValid = false;
+            }else if(!email || !/\S+@\S+\.\S+/.test(email)){
+                document.getElementById('error-email').innerText = 'Valid email required';
+                isValid = false;
             }
         }
+        return isValid;
     }
 
-    // Function to go back to the previous step
-    function prevStep() {
-        if (currentStep > 0) {
-            currentStep--;
-            showStep(currentStep);
-        }
+function nextStep() {
+    if (validateStep(currentStep)) {
+        currentStep++;
+        showStep(currentStep);
     }
+}
 
-
-    // Initially show the first step
+function prevStep() {
+    currentStep--;
     showStep(currentStep);
+}
 
-    // Client-side validation on form submission (for passwords)
-    document.getElementById('registrationForm').addEventListener('submit', function(event) {
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm_password').value;
-        if (password !== confirmPassword) {
-            alert('Passwords do not match!');
-            event.preventDefault();
+function validateFileUpload() {
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+        let isValid = true;
+        let errorMessage = '';
+
+        // Validate files for each input field
+        const fields = ['photo', 'hiv_report', 'address_proof', 'id_proof'];
+        
+        fields.forEach(field => {
+            const fileInput = document.getElementById(field);
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                
+                // Check file type
+                if (!allowedTypes.includes(file.type)) {
+                    errorMessage += `${field} must be a JPEG image, PNG, or PDF. `;
+                    isValid = false;
+                }
+
+                // Check file size
+                if (file.size > maxSize) {
+                    errorMessage += `${field} size exceeds 50MB limit. `;
+                    isValid = false;
+                }
+            }
+        });
+
+        // Display error messages
+        if (!isValid) {
+            document.getElementById('error-step_8').innerText = errorMessage;
         }
-    });
-</script>
+
+        return isValid;
+    }
+
+    // Add validation on form submission
+    document.getElementById('registrationForm').onsubmit = function(event) {
+        if (!validateFileUpload()) {
+            event.preventDefault(); // Prevent form submission if validation fails
+        }
+    };
+
+    </script>
 </body>
 </html>
