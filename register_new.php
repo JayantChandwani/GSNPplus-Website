@@ -1,5 +1,4 @@
 <?php
-ob_start();
 // Start session for form progress tracking
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -46,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username=sanitize_input($_POST['username']);
     $email=sanitize_input($_POST['email']);
     $password=sanitize_input($_POST['password']);
-    $candidate_id="ishaan23";
+    $candidate_id="ishaan53";
     //Have to Make a Candidate_ID generating function
     try {
     
@@ -113,7 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
      
     }
 }
-ob_end_flush();
 ?>
 
 <!DOCTYPE html>
@@ -307,17 +305,7 @@ ob_end_flush();
         </fieldset>
     </form>
 
-    
-    <script src="validators.js"></script>
-    <script>
-        // Add validation on form submission
-        document.getElementById('registrationForm').onsubmit = function(event) {
-            if (!validateFileUpload()) {
-                event.preventDefault(); // Prevent form submission if validation fails
-            }
-        };
+    <script src="validators.js">
     </script>
-
-    
 </body>
 </html>
