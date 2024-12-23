@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Redirect to index.php
         if(!isset($_SESSION['Email'])){
-            header('Location: index.php');
+            header('Location: profile.php');
         }
         else{
             header('Location: confirm.html');
