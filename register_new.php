@@ -281,7 +281,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <fieldset class="step" id="step-7">
             <legend>Step 7: Account Setup</legend>
             <label for="username">Username:</label>
-            <input type="text" id="username" name="username">
+            <input type="text" id="username" name="username" onkeyup="checkUsername()">
+            <span id="usernameFeedback"></span>
             <br><br>
             <label for="email">Email:</label>
             <input type="email" id="email" name="email">
@@ -323,6 +324,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </form>
  
     <script src="validators.js">
+    </script>
+    <script>
+    function checkUsername() {
+        const username = document.getElementById("username").value;
+        const feedback = document.getElementById("usernameFeedback");
+
+        if (username.length === 0) {
+            feedback.textContent = "";
+            return;
+        }
+
+        fetch(`check_username.php?username=${encodeURIComponent(username)}`)
+            .then(response => response.text())
+            .then(data => {
+                if (data === "exists") {
+                    feedback.textContent = "Username already exists. Please choose another.";
+                    feedback.style.color = "red";
+                    
+                } else {
+                    feedback.textContent = "Username is available.";
+                    feedback.style.color = "green";
+                    
+                }
+            })
+            .catch(error => console.error("Error:", error));
+    }
     </script>
 </body>
 </html>

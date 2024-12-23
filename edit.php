@@ -78,7 +78,8 @@ $user_data = $stmt->fetch();
             <div class="form-group">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" 
-                       value="<?php echo sanitize_input($user_data['Username']) ?>">
+                       value="<?php echo sanitize_input($user_data['Username']) ?>" onkeyup="checkUsername()">
+                       <span id="usernameFeedback"></span>
                 <span class="error" id="username-error"></span>
             </div>
             
@@ -96,5 +97,31 @@ $user_data = $stmt->fetch();
         </form>
     </div>
     <script src="validations.js"></script>
+    <script>
+    function checkUsername() {
+        const username = document.getElementById("username").value;
+        const feedback = document.getElementById("usernameFeedback");
+
+        if (username.length === 0) {
+            feedback.textContent = "";
+            return;
+        }
+
+        fetch(`check_username.php?username=${encodeURIComponent(username)}`)
+            .then(response => response.text())
+            .then(data => {
+                if (data === "exists") {
+                    feedback.textContent = "Username already exists. Please choose another.";
+                    feedback.style.color = "red";
+                    
+                } else {
+                    feedback.textContent = "Username is available.";
+                    feedback.style.color = "green";
+                    
+                }
+            })
+            .catch(error => console.error("Error:", error));
+    }
+    </script>
 </body>
 </html>
