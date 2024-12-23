@@ -9,6 +9,8 @@ require_once 'dbconn.php';
 $error = "";
 $success = "";
 
+// print_r($_SESSION);
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];

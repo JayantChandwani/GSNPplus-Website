@@ -2,25 +2,25 @@
 // Start session for form progress tracking
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+// session_destroy();
 session_start();
+session_unset(); 
 
 require_once 'dbconn.php';
-
-
-
+ 
 $error = '';
 $success = '';
-
-
-
-
+ 
+ 
+ 
+ 
 // Function to sanitize input and prevent XSS attacks
 function sanitize_input($input) {
     // Ensure $input is a string before applying trim
     $input = is_string($input) ? trim($input) : '';
     return htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
 }
-
+ 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $first_name=sanitize_input($_POST['first_name']);
@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $dob=sanitize_input($_POST['dob']);
     $height=sanitize_input($_POST['height']);
     $weight=sanitize_input($_POST['weight']);
+    $gender = sanitize_input($_POST['gender']);
     $marital_status=sanitize_input($_POST['marital_status']);
     
     $family_members=sanitize_input($_POST['family_members']);
@@ -43,21 +44,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $ref_name=sanitize_input($_POST['ref_name']);
     $ref_contact=sanitize_input($_POST['ref_contact']);
     $username=sanitize_input($_POST['username']);
+    $_SESSION['username']=$username;
     $email=sanitize_input($_POST['email']);
+ 
     $password=sanitize_input($_POST['password']);
-    $candidate_id="ishaan53";
+    $candidate_id=uniqid();
     //Have to Make a Candidate_ID generating function
     try {
     
         $conn->beginTransaction();
        
-        $stmt = $conn->prepare("INSERT INTO candidate (cid,FirstName, MiddleName, LastName, DOB,Height_inch,Weight,MaritalStatus)
-                               VALUES (:cid,:first_name, :middle_name, :last_name, :dob, :height, :weight, :marital_status)");
+        echo "0";
+        $stmt = $conn->prepare("INSERT INTO candidate (cid,FirstName, MiddleName, LastName, Gender, DOB,Height_inch, Weight, MaritalStatus)
+                               VALUES (:cid, :first_name, :middle_name, :last_name, :gender, :dob, :height, :weight, :marital_status)");
         $stmt->execute([':cid'=>$candidate_id,':first_name'=>$first_name,
         ':middle_name'=>$middle_name,':last_name'=>$last_name,
+        ':gender'=>$gender,
         ':dob'=>$dob,':height'=>$height,
         ':weight'=>$weight,':marital_status'=>$marital_status]);
-        
+        echo "1";
     
         //Step 2 SQL Query
         
@@ -69,8 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':art_status' => $art_status,
             ':cd4_count' => $cd4_count
         ]);
+        echo "2";
         
-
+ 
         $stmt = $conn->prepare("INSERT INTO business (cid, EmploymentType, Income) 
                              VALUES (:candidate_id, :employment, :income)");
         $stmt->execute([
@@ -78,9 +84,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':employment' => $employment,
             ':income' => $income
         ]);
+        echo "3";
+
         
         //Step 5 SQL Query
-
+ 
         $stmt = $conn->prepare("INSERT INTO reference (cid, ReferenceName1, ReferenceContact1) 
                              VALUES (:candidate_id, :name, :contact)");
         $stmt->execute([
@@ -88,7 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':name' => $ref_name,
             ':contact' => $ref_contact
         ]);
-
+        echo "4";
+ 
         $stmt = $conn->prepare("INSERT INTO login (cid, Username, Email, Password) 
                              VALUES (:candidate_id, :username, :email, :password)");
         $stmt->execute([
@@ -97,23 +106,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':email' => $email,
             ':password' => $password
         ]);
-
+        echo "5";
+ 
         //Step 8 SQL Query
         
         $conn->commit();
         $success = 'Registration completed successfully!';
         //session_destroy(); // Clear session data
-        header('Location: confirm.html');
+        header('Location: otp_login.php');
         exit();
     } catch (Exception $e) {
         $conn->rollBack();
-       
+        echo $e->getMessage();
         $error = 'Error during registration: ' . $e->getMessage();
      
     }
 }
 ?>
-
+ 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -156,6 +166,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <input type="number" id="weight" name="weight">
             <span class="error" id="error-weight"></span>
             <br><br>
+            <label for="gender">Gender:</label>
+            <select id="gender" name="gender">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+            <span class="error" id="error-gender"></span>
+            <br><br>
             <label for="marital_status">Marital Status:</label>
             <select id="marital_status" name="marital_status">
                 <option value="Single">Single</option>
@@ -167,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <br><br>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
-
+ 
         <!-- Step 2 -->
         <fieldset class="step" id="step-2">
             <legend>Step 2: Family Info</legend>
@@ -182,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
-
+ 
         <!-- Step 3 -->
         <fieldset class="step" id="step-3">
             <legend>Step 3: Health Details</legend>
@@ -203,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
-
+ 
         <!-- Step 4 -->
         <fieldset class="step" id="step-4">
             <legend>Step 4: Business Info</legend>
@@ -223,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
-
+ 
         <!-- Step 5 -->
         <fieldset class="step" id="step-5">
             <legend>Step 5: Property Details</legend>
@@ -244,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
-
+ 
         <!-- Step 6 -->
         <fieldset class="step" id="step-6">
             <legend>Step 6: References</legend>
@@ -259,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
-
+ 
         <!-- Step 7 -->
         <fieldset class="step" id="step-7">
             <legend>Step 7: Account Setup</legend>
@@ -283,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="button" onclick="prevStep()">Previous</button>
             <button type="button" onclick="nextStep()">Next</button>
         </fieldset>
-
+ 
         <!-- Step 8 -->
         <fieldset class="step" id="step-8">
             <label for="photo">Photograph:</label>
@@ -304,7 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="submit">Register</button>
         </fieldset>
     </form>
-
+ 
     <script src="validators.js">
     </script>
 </body>

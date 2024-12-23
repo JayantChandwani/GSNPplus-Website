@@ -8,6 +8,8 @@ require_once 'send_otp.php';
 
 session_start();
 
+print_r($_SESSION);
+
 function generateOTP($input, $length = 6) {
     $hash = md5($input);
     $numericHash = preg_replace('/[^0-9]/', '', $hash);
@@ -27,16 +29,28 @@ function sanitize_input($input) {
 $success = "";
 $failure = "";
 
+
 // Generate OTP and send it only on the first page load
 if (!isset($_SESSION['otp_generated'])) {
     $username = $_SESSION['username'];
+    $user_email = "";
+    
+    // echo "here";
+    // echo $_SESSION;
 
-    $sql = "SELECT Email FROM login WHERE Username = :username";
-    $res = $conn->prepare($sql);
-    $res->bindParam(':username', $username, PDO::PARAM_STR);
-    $res->execute();
-    $user_info = $res->fetch(PDO::FETCH_ASSOC);
-    $user_email = $user_info['Email'];
+    if(!isset($_SESSION['Email'])){
+        $sql = "SELECT Email FROM login WHERE Username = :username";
+        $res = $conn->prepare($sql);
+        $res->bindParam(':username', $username, PDO::PARAM_STR);
+        $res->execute();
+        $user_info = $res->fetch(PDO::FETCH_ASSOC);
+        $user_email = $user_info['Email'];
+    }
+    else{
+        $user_email = $_SESSION['Email'];
+    }
+
+    echo "user_email found" . $user_email;
 
     $secret = uniqid();
     $timestamp = time();
@@ -61,7 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         unset($_SESSION['otp_generated']);
 
         // Redirect to index.php
-        header('Location: index.php');
+        if(!isset($_SESSION['Email'])){
+            header('Location: index.php');
+        }
+        else{
+            header('Location: confirm.html');
+        }
         exit();
     } else {
         $failure = "Invalid OTP. Please try again.";
