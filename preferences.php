@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'database_connection.php';
+require_once 'dbconn.php';
 
 $username = $_SESSION['username'];
 $cidqry = "SELECT cid FROM login WHERE username = :username";
