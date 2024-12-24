@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once "dbconn.php";
 session_start();
 function sanitize_input($input) {
@@ -49,7 +52,7 @@ $user_type=$user_info['user_type'];
 ?>
 
 
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -69,5 +72,57 @@ $user_type=$user_info['user_type'];
         <a href="logout.php" class="edit-btn">Logout</a>
     </div>
 </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .tab-content { margin-top: 20px; }
+    </style>
+    <script>
+        function showTab(tabId) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Welcome, <?php echo htmlspecialchars($username); ?>!</h2>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" href="#" onclick="showTab('profileTab')">Profile</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showTab('preferencesTab')">Preferences</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showTab('selectedProfilesTab')">Selected Profiles</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showTab('listOfProfilesTab')">List of Profiles</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="profileTab" style="display: block;">
+        <?php include 'profile_listing.php'; ?>
+    </div>
+    <div class="tab-content" id="preferencesTab" style="display: none;">
+        <?php include 'preferences.php'; ?>
+    </div>
+    <div class="tab-content" id="selectedProfilesTab" style="display: none;">
+        <?php include 'selected_profiles.php'; ?>
+    </div>
+    <a href="edit.php" class="edit-btn">Edit Profile</a>
+    <br>
+    <a href="logout.php" class="edit-btn">Logout</a>
+</div>
+</body>
 </html>
+
 
