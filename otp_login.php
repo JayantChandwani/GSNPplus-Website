@@ -5,6 +5,9 @@ ini_set('display_errors', 1);
 
 require_once 'dbconn.php';
 require_once 'send_otp.php';
+require_once 'translate.php';
+//include 'languageSelector.php';
+$lang = $_SESSION['lang'] ?? 'en';
 
 session_start();
 
@@ -86,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $failure = "Invalid OTP. Please try again.";
     }
 }
+ob_start();
 ?>
 
 <!DOCTYPE html>
@@ -117,3 +121,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 </body>
 </html>
+<?php
+$pageContent = ob_get_clean();
+
+// Translate the content
+echo translatePage($pageContent, $lang);
+?>
