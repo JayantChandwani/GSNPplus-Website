@@ -1,0 +1,61 @@
+<!-- Updated language selector dialog with native language names --><div id="language-selector-dialog" style="position: fixed; top: 10px; right: 10px; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif; font-size: 14px; z-index: 1000;">
+    <form method="POST" style="margin: 0;">
+        <label for="lang" style="display: block; margin-bottom: 5px;">&#2349;&#2366;&#2359;&#2366; &#2330;&#2369;&#2344;&#2375;&#2306; / Select Language:</label>
+        <select name="lang" id="lang" onchange="this.form.submit()" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 3px;">
+                            <option value="en" selected>English</option>
+                            <option value="hi">&#2361;&#2367;&#2306;&#2342;&#2368;</option>
+                            <option value="gu">&#2711;&#2753;&#2716;&#2736;&#2750;&#2724;&#2752;</option>
+                            <option value="mr">&#2350;&#2352;&#2366;&#2336;&#2368;</option>
+                    </select>
+    </form>
+</div><!-- Updated language selector dialog with native language names --><div id="language-selector-dialog" style="position: fixed; top: 10px; right: 10px; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif; font-size: 14px; z-index: 1000;">
+    <form method="POST" style="margin: 0;">
+        <label for="lang" style="display: block; margin-bottom: 5px;">&#2349;&#2366;&#2359;&#2366; &#2330;&#2369;&#2344;&#2375;&#2306; / Select Language:</label>
+        <select name="lang" id="lang" onchange="this.form.submit()" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 3px;">
+                            <option value="en" selected>English</option>
+                            <option value="hi">&#2361;&#2367;&#2306;&#2342;&#2368;</option>
+                            <option value="gu">&#2711;&#2753;&#2716;&#2736;&#2750;&#2724;&#2752;</option>
+                            <option value="mr">&#2350;&#2352;&#2366;&#2336;&#2368;</option>
+                    </select>
+    </form>
+</div><br><b>Warning</b><p>:  Undefined global variable $_SESSION in<b>C:\xampp\htdocs\my-project\preferences.php</b>on line<b>9</b><br>
+<br>
+<b>Warning</b>:  Trying to access array offset on value of type null in<b>C:\xampp\htdocs\my-project\preferences.php</b>on line<b>9</b><br>
+
+</p><div>
+    
+    <form action="" method="post">
+        <label>Age Range:<input type="text" name="age_range" value=" - " placeholder="e.g., 25-35" required readonly class="locked">
+        </label><br>
+        <label>Marital Status:<input type="text" name="marital_status" value="" placeholder="e.g., Single" required readonly class="locked">
+        </label><br>
+        <label>Education:<input type="text" name="education" value="" placeholder="e.g., Bachelor&rsquo;s" required readonly class="locked">
+        </label><br>
+        <button type="submit" class="btn btn-primary" style="display:none;" id="saveButton">Save Preferences</button>
+    </form>
+    <button type="button" class="btn btn-secondary" onclick="unlockPreferences()">Update Preferences</button>
+</div><script>
+    function unlockPreferences() {
+        const inputs = document.querySelectorAll('input[type="text"]');
+        const saveButton = document.getElementById('saveButton');
+        
+        inputs.forEach(input => {
+            input.removeAttribute('readonly');
+            input.classList.remove('locked');
+            input.classList.add('unlocked'); 
+        });
+        
+        saveButton.style.display = 'inline';
+    }
+</script><style>
+    input.locked {
+        background-color: #f0f0f0; 
+        color: #999; 
+        cursor: not-allowed;
+    }
+    input.unlocked {
+        background-color: #ffffff;
+        color: #000;
+        cursor: text;
+    }
+</style>

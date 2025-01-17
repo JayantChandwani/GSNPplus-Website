@@ -1,10 +1,6 @@
 <?php
 // session_start();
-require_once 'translation_wrapper.php';
-wrapWithTranslation(function () {
 require_once 'dbconn.php';
-require_once 'translate.php';
-include 'languageSelector.php';
 
 $username = $_SESSION['username'];
 $cidqry = "SELECT cid FROM login WHERE username = :username";
@@ -102,10 +98,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         cursor: text;
     }
 </style>
-<?php
-    // Get the buffered content
-    $pageContent = ob_get_clean();
-
-    // Translate and output the content
-    echo translatePage($pageContent, $lang);
-});?>
