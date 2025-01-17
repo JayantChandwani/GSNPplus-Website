@@ -35,6 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_session']=$user_session;
             $status=$user['status'];
             $_SESSION['status']=$status;
+            $_SESSION['type']="login";
             if($status!="A"){
                 $error="Account not Activated";
             }else{

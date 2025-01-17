@@ -12,7 +12,8 @@ if ($_SESSION['type'] == "register") {
 } else {
     $show_change_email_option = false;
 }
-
+print_r($_SESSION['type']);
+print_r($show_change_email_option);
 function generateOTP($input, $length = 6) {
     $hash = md5($input);
     $numericHash = preg_replace('/[^0-9]/', '', $hash);
@@ -31,6 +32,38 @@ function sanitize_input($input) {
 
 $success = "";
 $failure = "";
+// Generate OTP and send it only on the first page load
+if (!isset($_SESSION['otp_generated'])) {
+    $username = $_SESSION['username'];
+    $user_email = "";
+    
+    // echo "here";
+    // echo $_SESSION;
+
+    if(!isset($_SESSION['Email'])){
+        $sql = "SELECT Email FROM login WHERE Username = :username";
+        $res = $conn->prepare($sql);
+        $res->bindParam(':username', $username, PDO::PARAM_STR);
+        $res->execute();
+        $user_info = $res->fetch(PDO::FETCH_ASSOC);
+        $user_email = $user_info['Email'];
+    }
+    else{
+        $user_email = $_SESSION['Email'];
+    }
+
+    echo "user_email found" . $user_email;
+
+    $secret = uniqid();
+    $timestamp = time();
+    $input = $secret . $timestamp;
+    $otp = generateOTP($input);
+
+    $_SESSION['otp'] = $otp; // Store OTP in session
+    $_SESSION['otp_generated'] = true; // Flag to avoid regenerating OTP
+
+    sendOTP($user_email, $otp);
+}
 
 // Handle Change Email Request
 if (isset($_POST['change_email_form'])) {
@@ -63,7 +96,7 @@ if (isset($_POST['change_email_form'])) {
 } elseif (isset($_POST['otp'])) {
     // Handle OTP validation
     $entered_otp = sanitize_input($_POST['otp']);
-    $stored_otp = $_SESSION['otp'] ?? null; // Avoid undefined index
+    $stored_otp = $_SESSION['otp'];
 
     if ($entered_otp == $stored_otp) {
         $success = "Logged in Successfully";
@@ -73,7 +106,7 @@ if (isset($_POST['change_email_form'])) {
         unset($_SESSION['otp_generated']);
 
         // Redirect to profile or confirmation page
-        if (!isset($_SESSION['Email'])) {
+        if ($_SESSION['type']=="login") {
             header('Location: profile.php');
         } else {
             header('Location: confirm.html');
