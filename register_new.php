@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $ref_contact=sanitize_input($_POST['ref_contact']);
     $username=sanitize_input($_POST['username']);
     $_SESSION['username']=$username;
+    $_SESSION['type']="register";
     $email=sanitize_input($_POST['email']);
  
     $password=sanitize_input($_POST['password']);
