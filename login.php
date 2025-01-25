@@ -1,4 +1,15 @@
 <?php
+// Allow requests from your React app (running at http://localhost:3000
+// Enable CORS if required
+header('Access-Control-Allow-Origin: http://localhost:3000');  // Replace with your actual frontend URL
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0);
+}
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -6,49 +17,39 @@ session_start();
 
 require_once 'dbconn.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json'); // Send the correct content-type for JSON
+$rawInputData = file_get_contents("php://input");
 
-$response = [
-    'success' => false,
-    'message' => ''
-];
+// Decode the JSON data into an associative array
+$inputData = json_decode($rawInputData, true);
+$username = $inputData['username'];
+$password = $inputData['password'];
+try {
+            // Use a prepared statement for security
+            $sql = "SELECT * FROM login WHERE Username = :username AND Password = :password";
+            $result = $conn->prepare($sql);
+            $result->bindParam(':username', $username, PDO::PARAM_STR);
+            $result->bindParam(':password', $password, PDO::PARAM_STR);
+            $result->execute();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-
-    if (!empty($username) && !empty($password)) {
-        $sql = "SELECT * FROM login WHERE Username = :username AND Password = :password";
-        $result = $conn->prepare($sql);
-        $result->bindParam(':username', $username, PDO::PARAM_STR);
-        $result->bindParam(':password', $password, PDO::PARAM_STR);
-        $result->execute();
-
-        if (!$result) {
-            $response['message'] = "SQL Error: " . $conn->error;
-            echo json_encode($response);
-            exit;
-        }
-
-        if ($result->rowCount() > 0) {
-            $user = $result->fetch(PDO::FETCH_ASSOC);
-            $_SESSION['username'] = $username;
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_type'] = $user['user_type'];
-            $_SESSION['status'] = $user['status'];
-            if ($user['status'] != "A") {
-                $response['message'] = "Account not Activated";
+            // Check for SQL errors
+            if ($result->rowCount() > 0) {
+                $user = $result->fetch(PDO::FETCH_ASSOC);
+                echo json_encode([
+                    'success'=>true,
+                    'message'=>'Login successful',
+                ]);
             } else {
-                $response['success'] = true;
-                $response['message'] = "Login successful";
+                echo json_encode([
+                    'success'=>false,
+                    'message'=>'Invalid username or password',
+                ]);
             }
-        } else {
-            $response['message'] = "Invalid username or password";
+        } catch (PDOException $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Database error: ' . $e->getMessage(),
+            ]);
         }
-    } else {
-        $response['message'] = "Please fill in all fields";
-    }
-}
 
-echo json_encode($response);
 ?>

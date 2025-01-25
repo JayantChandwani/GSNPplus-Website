@@ -23,29 +23,33 @@ export default function MatrimonyLogin() {
       setError("Please fill in all fields")
       return
     }
-
+    const loginData = {
+      username: username,
+      password: password,
+    };
     try {
-      const response = await fetch("/login.php", {
+      const response = await fetch("http://localhost:80/frontend/login.php", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ username, password }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Login failed")
-      }
-
-      const result = await response.json()
-      console.log(result) // Debugging statement to check the response
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(loginData),
+      });
+      console.log(response);
+      const result = await response.json();
+      console.log(result);
       if (result.success) {
-        router.push("/profile")
+        // Proceed with login success (redirect or change UI)
+        console.log("Login successful");
       } else {
-        setError(result.message || "Invalid username or password")
+        // Show error message
+        setError(result.message);
       }
-    } catch (err) {
-      setError("Invalid username or password")
+    } catch (error) {
+      console.error("Error:", error);
+      setError("An error occurred. Please try again.");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative bg-background text-foreground">
