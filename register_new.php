@@ -2,129 +2,129 @@
 // Start session for form progress tracking
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-// session_destroy();
 session_start();
-session_unset(); 
+session_unset();
 
 require_once 'dbconn.php';
- 
-$error = '';
-$success = '';
- 
- 
- 
- 
+
+header('Content-Type: application/json');
+
+$response = [
+    'success' => false,
+    'message' => ''
+];
+
 // Function to sanitize input and prevent XSS attacks
 function sanitize_input($input) {
-    // Ensure $input is a string before applying trim
     $input = is_string($input) ? trim($input) : '';
     return htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
 }
- 
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $first_name=sanitize_input($_POST['first_name']);
-    $middle_name=sanitize_input($_POST['middle_name']);
-    $last_name=sanitize_input($_POST['last_name']);
-    $dob=sanitize_input($_POST['dob']);
-    $height=sanitize_input($_POST['height']);
-    $weight=sanitize_input($_POST['weight']);
+    $first_name = sanitize_input($_POST['first_name']);
+    $middle_name = sanitize_input($_POST['middle_name']);
+    $last_name = sanitize_input($_POST['last_name']);
+    $dob = sanitize_input($_POST['dob']);
+    $height = sanitize_input($_POST['height']);
+    $weight = sanitize_input($_POST['weight']);
     $gender = sanitize_input($_POST['gender']);
-    $marital_status=sanitize_input($_POST['marital_status']);
-    
-    $family_members=sanitize_input($_POST['family_members']);
-    $hiv_positive_members=sanitize_input($_POST['hiv_positive_members']);
-    $hiv_detection=sanitize_input($_POST['hiv_detection']);
-    $art_status=sanitize_input($_POST['art_status']);
-    $cd4_count=sanitize_input($_POST['cd4_count']);
-    $employment=sanitize_input($_POST['employment']);
-    $income=sanitize_input($_POST['income']);
-    $property_type=sanitize_input($_POST['property_type']);
-    $property_value=sanitize_input($_POST['property_value']);
-    $ref_name=sanitize_input($_POST['ref_name']);
-    $ref_contact=sanitize_input($_POST['ref_contact']);
-    $username=sanitize_input($_POST['username']);
-    $_SESSION['username']=$username;
-    $_SESSION['type']="register";
-    $email=sanitize_input($_POST['email']);
- 
-    $password=sanitize_input($_POST['password']);
-    $candidate_id=uniqid();
-    //Have to Make a Candidate_ID generating function
-    try {
-    
-        $conn->beginTransaction();
-       
-        echo "0";
-        $stmt = $conn->prepare("INSERT INTO candidate (cid,FirstName, MiddleName, LastName, Gender, DOB,Height_inch, Weight, MaritalStatus)
-                               VALUES (:cid, :first_name, :middle_name, :last_name, :gender, :dob, :height, :weight, :marital_status)");
-        $stmt->execute([':cid'=>$candidate_id,':first_name'=>$first_name,
-        ':middle_name'=>$middle_name,':last_name'=>$last_name,
-        ':gender'=>$gender,
-        ':dob'=>$dob,':height'=>$height,
-        ':weight'=>$weight,':marital_status'=>$marital_status]);
-        echo "1";
-    
-        //Step 2 SQL Query
-        
-        $stmt = $conn->prepare("INSERT INTO health (cid, HivDetectDate, ArtStatus, CD4Count) 
-                             VALUES (:candidate_id, :hiv_detection, :art_status, :cd4_count)");
-        $stmt->execute([
-            ':candidate_id' => $candidate_id,
-            ':hiv_detection' => $hiv_detection,
-            ':art_status' => $art_status,
-            ':cd4_count' => $cd4_count
-        ]);
-        echo "2";
-        
- 
-        $stmt = $conn->prepare("INSERT INTO business (cid, EmploymentType, Income) 
-                             VALUES (:candidate_id, :employment, :income)");
-        $stmt->execute([
-            ':candidate_id' => $candidate_id,
-            ':employment' => $employment,
-            ':income' => $income
-        ]);
-        echo "3";
+    $marital_status = sanitize_input($_POST['marital_status']);
+    $family_members = sanitize_input($_POST['family_members']);
+    $hiv_positive_members = sanitize_input($_POST['hiv_positive_members']);
+    $hiv_detection = sanitize_input($_POST['hiv_detection']);
+    $art_status = sanitize_input($_POST['art_status']);
+    $cd4_count = sanitize_input($_POST['cd4_count']);
+    $employment = sanitize_input($_POST['employment']);
+    $income = sanitize_input($_POST['income']);
+    $property_type = sanitize_input($_POST['property_type']);
+    $property_value = sanitize_input($_POST['property_value']);
+    $ref_name = sanitize_input($_POST['ref_name']);
+    $ref_contact = sanitize_input($_POST['ref_contact']);
+    $username = sanitize_input($_POST['username']);
+    $email = sanitize_input($_POST['email']);
+    $password = sanitize_input($_POST['password']);
+    $confirm_password = sanitize_input($_POST['confirm_password']);
 
-        
-        //Step 5 SQL Query
- 
-        $stmt = $conn->prepare("INSERT INTO reference (cid, ReferenceName1, ReferenceContact1) 
-                             VALUES (:candidate_id, :name, :contact)");
-        $stmt->execute([
-            ':candidate_id' => $candidate_id,
-            ':name' => $ref_name,
-            ':contact' => $ref_contact
-        ]);
-        echo "4";
- 
-        $stmt = $conn->prepare("INSERT INTO login (cid, Username, Email, Password) 
-                             VALUES (:candidate_id, :username, :email, :password)");
-        $stmt->execute([
-            ':candidate_id' => $candidate_id,
-            ':username' => $username,
-            ':email' => $email,
-            ':password' => $password
-        ]);
-        echo "5";
- 
-        //Step 8 SQL Query
-        
-        $conn->commit();
-        $success = 'Registration completed successfully!';
-        //session_destroy(); // Clear session data
-        header('Location: otp_login.php');
-        exit();
-    } catch (Exception $e) {
-        $conn->rollBack();
-        echo $e->getMessage();
-        $error = 'Error during registration: ' . $e->getMessage();
-     
+    // Handle file uploads
+    $photo = $_FILES['photo'];
+    $hiv_report = $_FILES['hiv_report'];
+    $address_proof = $_FILES['address_proof'];
+    $id_proof = $_FILES['id_proof'];
+
+    $upload_dir = 'uploads/';
+    $allowed_types = ['image/jpeg', 'image/png', 'application/pdf'];
+
+    // Function to handle file upload
+    function handle_file_upload($file, $upload_dir, $allowed_types) {
+        if ($file['error'] === UPLOAD_ERR_OK) {
+            if (in_array($file['type'], $allowed_types)) {
+                $file_name = basename($file['name']);
+                $target_file = $upload_dir . $file_name;
+                if (move_uploaded_file($file['tmp_name'], $target_file)) {
+                    return $target_file;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
+
+    $photo_path = handle_file_upload($photo, $upload_dir, $allowed_types);
+    $hiv_report_path = handle_file_upload($hiv_report, $upload_dir, $allowed_types);
+    $address_proof_path = handle_file_upload($address_proof, $upload_dir, $allowed_types);
+    $id_proof_path = handle_file_upload($id_proof, $upload_dir, $allowed_types);
+
+    if ($photo_path && $hiv_report_path && $address_proof_path && $id_proof_path) {
+        // Insert data into the database
+        $sql = "INSERT INTO users (first_name, middle_name, last_name, dob, height, weight, gender, marital_status, family_members, hiv_positive_members, hiv_detection, art_status, cd4_count, employment, income, property_type, property_value, ref_name, ref_contact, username, email, password, photo, hiv_report, address_proof, id_proof) VALUES (:first_name, :middle_name, :last_name, :dob, :height, :weight, :gender, :marital_status, :family_members, :hiv_positive_members, :hiv_detection, :art_status, :cd4_count, :employment, :income, :property_type, :property_value, :ref_name, :ref_contact, :username, :email, :password, :photo, :hiv_report, :address_proof, :id_proof)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':first_name', $first_name);
+        $stmt->bindParam(':middle_name', $middle_name);
+        $stmt->bindParam(':last_name', $last_name);
+        $stmt->bindParam(':dob', $dob);
+        $stmt->bindParam(':height', $height);
+        $stmt->bindParam(':weight', $weight);
+        $stmt->bindParam(':gender', $gender);
+        $stmt->bindParam(':marital_status', $marital_status);
+        $stmt->bindParam(':family_members', $family_members);
+        $stmt->bindParam(':hiv_positive_members', $hiv_positive_members);
+        $stmt->bindParam(':hiv_detection', $hiv_detection);
+        $stmt->bindParam(':art_status', $art_status);
+        $stmt->bindParam(':cd4_count', $cd4_count);
+        $stmt->bindParam(':employment', $employment);
+        $stmt->bindParam(':income', $income);
+        $stmt->bindParam(':property_type', $property_type);
+        $stmt->bindParam(':property_value', $property_value);
+        $stmt->bindParam(':ref_name', $ref_name);
+        $stmt->bindParam(':ref_contact', $ref_contact);
+        $stmt->bindParam(':username', $username);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':password', $password);
+        $stmt->bindParam(':photo', $photo_path);
+        $stmt->bindParam(':hiv_report', $hiv_report_path);
+        $stmt->bindParam(':address_proof', $address_proof_path);
+        $stmt->bindParam(':id_proof', $id_proof_path);
+
+        if ($stmt->execute()) {
+            $response['success'] = true;
+            $response['message'] = 'Registration successful';
+        } else {
+            $response['message'] = 'Database error: ' . $conn->error;
+        }
+    } else {
+        $response['message'] = 'File upload failed';
+    }
+} else {
+    $response['message'] = 'Invalid request method';
 }
+
+echo json_encode($response);
 ?>
- 
 <!DOCTYPE html>
 <html lang="en">
 <head>
