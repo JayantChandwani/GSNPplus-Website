@@ -46,55 +46,141 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $query->execute();
         $update_success = true; // Set success flag
     } catch (PDOException $e) {
-        echo "<p>Error updating preferences: " . htmlspecialchars($e->getMessage()) . "</p>";
+        echo "<p class='error'>Error updating preferences: " . htmlspecialchars($e->getMessage()) . "</p>";
     }
 }
 ?>
 
-<div>
+<style>
+    .preferences-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 0.5rem;
+        color: #666;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        outline: none;
+        transition: all 0.3s;
+    }
+
+    .form-group input:focus {
+        border-color: #6a11cb;
+        box-shadow: 0 0 5px rgba(106, 17, 203, 0.3);
+    }
+
+    .form-group input.locked {
+        background-color: #f8f9fa;
+        color: #666;
+        cursor: not-allowed;
+    }
+
+    .form-group input.unlocked {
+        background-color: #fff;
+        color: #333;
+        cursor: text;
+    }
+
+    .btn {
+        display: inline-block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 16px;
+        font-weight: bold;
+        color: #fff;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s;
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .btn:hover {
+        background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
+    }
+
+    .btn-secondary {
+        background: #f8f9fa;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover {
+        background: #e9ecef;
+    }
+
+    .success {
+        color: #28a745;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .error {
+        color: #dc3545;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="preferences-container">
+    <h2>Your Preferences</h2>
+    
     <?php if ($update_success): ?>
-        <p class="alert alert-success">Preferences updated successfully!</p>
+        <p class="success">Preferences updated successfully!</p>
     <?php endif; ?>
 
     <form action="" method="post">
-        <label>Age Range: 
-            <input type="text" name="age_range" value="<?php echo htmlspecialchars("$minage - $maxage"); ?>" placeholder="e.g., 25-35" required readonly class="locked">
-        </label><br>
-        <label>Marital Status: 
-            <input type="text" name="marital_status" value="<?php echo htmlspecialchars($marital_status); ?>" placeholder="e.g., Single" required readonly class="locked">
-        </label><br>
-        <label>Education: 
-            <input type="text" name="education" value="<?php echo htmlspecialchars($education); ?>" placeholder="e.g., Bachelor’s" required readonly class="locked">
-        </label><br>
-        <button type="submit" class="btn btn-primary" style="display:none;" id="saveButton">Save Preferences</button>
+        <div class="form-group">
+            <label for="age_range">Age Range:</label>
+            <input type="text" id="age_range" name="age_range" value="<?php echo htmlspecialchars("$minage - $maxage"); ?>" placeholder="e.g., 25-35" required readonly class="locked">
+        </div>
+        <div class="form-group">
+            <label for="marital_status">Marital Status:</label>
+            <input type="text" id="marital_status" name="marital_status" value="<?php echo htmlspecialchars($marital_status); ?>" placeholder="e.g., Single" required readonly class="locked">
+        </div>
+        <div class="form-group">
+            <label for="education">Education:</label>
+            <input type="text" id="education" name="education" value="<?php echo htmlspecialchars($education); ?>" placeholder="e.g., Bachelor's" required readonly class="locked">
+        </div>
+        <button type="submit" class="btn" style="display:none;" id="saveButton">Save Preferences</button>
     </form>
     <button type="button" class="btn btn-secondary" onclick="unlockPreferences()">Update Preferences</button>
 </div>
 
 <script>
     function unlockPreferences() {
-        const inputs = document.querySelectorAll('input[type="text"]');
+        const inputs = document.querySelectorAll('.form-group input');
         const saveButton = document.getElementById('saveButton');
+        const updateButton = document.querySelector('.btn-secondary');
         
         inputs.forEach(input => {
             input.removeAttribute('readonly');
             input.classList.remove('locked');
-            input.classList.add('unlocked'); 
+            input.classList.add('unlocked');
         });
         
-        saveButton.style.display = 'inline';
+        saveButton.style.display = 'inline-block';
+        updateButton.style.display = 'none';
     }
 </script>
 
-<style>
-    input.locked {
-        background-color: #f0f0f0; 
-        color: #999; 
-        cursor: not-allowed;
-    }
-    input.unlocked {
-        background-color: #ffffff;
-        color: #000;
-        cursor: text;
-    }
-</style>
